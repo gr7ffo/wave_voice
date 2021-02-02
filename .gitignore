@@ -1,3 +1,5 @@
 .idea/
 credentials.json
 output.mp3
+*.pdf
+*.txt
