@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright by Christopher Sauer
+# Copyright by Christopher Sauer and Christof Küstner
 """
-@author: CSr
+@author: CSr and CfK
 """
 # ==============================================================================
 # IMPORT
