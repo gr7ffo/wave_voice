@@ -25,6 +25,19 @@ DEFAULT_OUTPUT_FILE = r"output.mp3"
 # ==============================================================================
 # DEFINITION
 # ==============================================================================
+def yes_or_no(question):
+    """Ask user a closed question"""
+    while True:
+        reply = str(input(question + " (y/N): ")).strip()
+        if len(reply) == 0:
+            return False
+        else:
+            if reply[0] == "y":
+                return True
+            elif reply[0] == "N":
+                return False
+
+
 def convert_pdf_to_string(pdf_file_path: Path) -> str:
     """Convert pdf_filename to string"""
     subprocess.call(['pdftotext', '-enc', 'UTF-8', pdf_file_path.absolute()])
@@ -74,6 +87,10 @@ def synthesize_text(text: str, output_audio_file_path: Path, language='DE'):
                 type=click.Path(file_okay=True, dir_okay=False,
                                 resolve_path=True, allow_dash=False,
                                 exists=True))
+@click.argument("language",
+                required=False,
+                default="EN",
+                type=str)
 @click.argument("output_audio_file",
                 required=False,
                 default=DEFAULT_OUTPUT_FILE,
@@ -83,10 +100,10 @@ def synthesize_text(text: str, output_audio_file_path: Path, language='DE'):
 @click.option("-y", "--yes", "yes",
               is_flag=True, default=False,
               help="yes: Do not ask for user input and proceed")
-def wave_voice(input_file: str, output_audio_file: str, yes=False):
+def wave_voice(input_file: str, language: str, output_audio_file: str, yes=False):
     """
     Converts text of an INPUT_FILE (*.pdf, *.txt) into speech
-    as OUTPUT_AUDIO_FILE (.mp3)
+    as OUTPUT_AUDIO_FILE (.mp3) in LANGUAGE (default:'EN')
     """
     input_file_path = Path(input_file)
     output_audio_file_path = Path(output_audio_file)
@@ -99,8 +116,11 @@ def wave_voice(input_file: str, output_audio_file: str, yes=False):
     else:
         raise NotImplementedError
 
-    # convert text to speech
-    synthesize_text(text, output_audio_file_path, language='EN')
+    # Count chars and ask user to proceed
+    text_chars = len(text)
+    if yes or yes_or_no(f"Do you want to proceed with {text_chars} chars?"):
+        # convert text to speech
+        synthesize_text(text, output_audio_file_path, language=language)
 
 
 if __name__ == "__main__":
