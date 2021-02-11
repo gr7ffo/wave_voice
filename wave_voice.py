@@ -9,6 +9,7 @@
 # ==============================================================================
 import os
 import subprocess
+import click
 from pathlib import Path
 from google.cloud import texttospeech
 
@@ -17,8 +18,8 @@ from google.cloud import texttospeech
 # CONFIG
 # ==============================================================================
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
-DEFAULT_INPUT_FILE_PATH = Path(r"example.pdf")
-DEFAULT_OUTPUT_FILE_PATH = Path(r"output.mp3")
+DEFAULT_INPUT_FILE = r"example.pdf"
+DEFAULT_OUTPUT_FILE = r"output.mp3"
 
 
 # ==============================================================================
@@ -66,12 +67,40 @@ def synthesize_text(text: str, output_audio_file_path: Path, language='DE'):
         out.write(response.audio_content)
 
 
-def wave_voice():
-    """Main method"""
-    # convert pdf to text
-    text = convert_pdf_to_string(DEFAULT_INPUT_FILE_PATH)
+@click.command()
+@click.argument("input_file",
+                required=False,
+                default=DEFAULT_INPUT_FILE,
+                type=click.Path(file_okay=True, dir_okay=False,
+                                resolve_path=True, allow_dash=False,
+                                exists=True))
+@click.argument("output_audio_file",
+                required=False,
+                default=DEFAULT_OUTPUT_FILE,
+                type=click.Path(file_okay=True, dir_okay=False,
+                                resolve_path=True, allow_dash=False,
+                                exists=False))
+@click.option("-y", "--yes", "yes",
+              is_flag=True, default=False,
+              help="yes: Do not ask for user input and proceed")
+def wave_voice(input_file: str, output_audio_file: str, yes=False):
+    """
+    Converts text of an INPUT_FILE (*.pdf, *.txt) into speech
+    as OUTPUT_AUDIO_FILE (.mp3)
+    """
+    input_file_path = Path(input_file)
+    output_audio_file_path = Path(output_audio_file)
+    if input_file_path.suffix == ".pdf":
+        # convert pdf to text
+        text = convert_pdf_to_string(input_file_path)
+    elif input_file_path.suffix == ".txt":
+        with open(input_file_path.absolute(), "r", encoding="UTF-8") as txt_file:
+            text = txt_file.read()
+    else:
+        raise NotImplementedError
+
     # convert text to speech
-    synthesize_text(text, DEFAULT_OUTPUT_FILE_PATH, language='EN')
+    synthesize_text(text, output_audio_file_path, language='EN')
 
 
 if __name__ == "__main__":

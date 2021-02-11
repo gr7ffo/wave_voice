@@ -6,6 +6,7 @@ dependencies:
   - python>=3.8
   - poppler
   - poppler-data
+  - click
   ### PIP -----------------------------------------------------------------------
   - pip
   - pip:
