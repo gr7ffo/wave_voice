@@ -10,14 +10,14 @@
 import os
 import subprocess
 import click
+
 from pathlib import Path
-from google.cloud import texttospeech
+from gtts import gTTS
 
 
 # ==============================================================================
 # CONFIG
 # ==============================================================================
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'credentials.json'
 DEFAULT_INPUT_FILE = r"example.pdf"
 DEFAULT_OUTPUT_FILE = r"output.mp3"
 
@@ -46,39 +46,11 @@ def convert_pdf_to_string(pdf_file_path: Path) -> str:
     return text
 
 
-def synthesize_text(text: str, output_audio_file_path: Path, language='DE'):
+def synthesize_text(text: str, output_audio_file_path: Path, language='de'):
     """Synthesize text from String and write to output.mp3"""
-    client = texttospeech.TextToSpeechClient()
-    input_text = texttospeech.SynthesisInput(text=text)
-
-    if language == 'DE':
-        voice = texttospeech.VoiceSelectionParams(
-            language_code="de-DE",
-            name="de-DE-Wavenet-F",
-            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
-        )
-    elif language == 'EN':
-        voice = texttospeech.VoiceSelectionParams(
-            language_code="en-US",
-            name="en-US-Wavenet-F",
-            ssml_gender=texttospeech.SsmlVoiceGender.FEMALE
-        )
-    else:
-        raise NotImplementedError
-
-    audio_config = texttospeech.AudioConfig(
-        audio_encoding=texttospeech.AudioEncoding.MP3
-    )
-
-    response = client.synthesize_speech(
-        request={"input": input_text,
-                 "voice": voice,
-                 "audio_config": audio_config}
-    )
-
-    with open(output_audio_file_path.absolute(), "wb") as out:
-        out.write(response.audio_content)
-
+    speech = gTTS(text=text, lang=language, slow=False)
+    speech.save(output_audio_file_path)
+    
 
 @click.command()
 @click.argument("input_file",
@@ -89,7 +61,7 @@ def synthesize_text(text: str, output_audio_file_path: Path, language='DE'):
                                 exists=True))
 @click.argument("language",
                 required=False,
-                default="EN",
+                default="en",
                 type=str)
 @click.argument("output_audio_file",
                 required=False,
